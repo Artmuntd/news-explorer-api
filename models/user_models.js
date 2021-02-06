@@ -24,20 +24,20 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.statics.findUserByCredentials = function (email, password) {
+userSchema.statics.findUserByCredentials = function finder(email, password) {
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
         return Promise.reject(new Error('не правильный email '));
       }
 
-      return bcrypt.compare(password, user.password).then((matched) => {
-        if (!matched) {
-          return Promise.reject(new Error(' не верный пароль'));
-        }
-
-        return user;
-      });
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            return Promise.reject(new Error(' не верный пароль'));
+          }
+          return user;
+        });
     });
 };
 

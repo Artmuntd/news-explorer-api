@@ -1,32 +1,43 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('../models/user_models');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 const NotFoundError = require('../errors/not_found_err');
-const { userNotFoundMessage, userCreateSuccessMessage } = require('../message');
-const User = require('../models/user_models');
+const UserExistError = require('../errors/user_exist_err');
+const ErrRequest = require('../errors/err_request');
+const { userNotFoundMessage } = require('../message');
 
 const createUser = async (req, res, next) => {
-  const { email, password, name } = req.body;
-  try {
-    const hash = await bcrypt.hash(password.trim(), 10);
+  const { email, name } = req.body;
 
-    await User.create({
-      email: email.trim(),
-      password: hash,
-      name: name.trim(),
-    });
+  User.findOne({ email })
+    .then((user) => {
+      if (user) {
+        return Promise.reject(new UserExistError('Данный пользователь уже зарегистрирован в базе'));
+      }
+      if (req.body.password === null || req.body.password.match(/^ *$/) !== null || req.body.password.length < 8) {
+        return Promise.reject(new ErrRequest('Неверно задан пароль'));
+      }
 
-    res.status(201).send({ message: userCreateSuccessMessage });
-  } catch (err) {
-    next(err);
-  }
+      return (bcrypt.hash(req.body.password, 10));
+    })
+    .then((password) => {
+      const user = User.create({
+        name, email, password,
+      });
+
+      return user;
+    })
+    .then(() => User.findOne({ email }))
+    .then((user) => res.send({ data: user }))
+    .catch(next);
 };
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
 
-  return User.findByCredentials(email, password)
+  return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret', { expiresIn: '7d' });
       res

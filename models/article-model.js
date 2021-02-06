@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const { default: validator } = require('validator');
+const NotFoundError = require('../errors/not_found_err');
+const ForbiddenError = require('../errors/prohibition_err');
 
 const articleSchema = new mongoose.Schema({
   owner: {
@@ -42,5 +44,21 @@ const articleSchema = new mongoose.Schema({
     required: true,
   },
 });
+
+articleSchema.statics.removeIfIsOwner = function (owner, articleId) {
+  return this.findById(articleId)
+    .select('+owner')
+    .then((article) => {
+      if (!article) {
+        return Promise.reject(new NotFoundError('Статья не найдена!'));
+      }
+
+      if (article.owner._id.toString() === owner) {
+        return article.remove();
+      }
+
+      return Promise.reject(new ForbiddenError('Нет доступа!'));
+    });
+};
 
 module.exports = mongoose.model('article', articleSchema);

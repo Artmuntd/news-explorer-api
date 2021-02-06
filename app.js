@@ -25,7 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(requestLogger);
 app.use('/', allRoutes);
 app.use(errorLogger);
-app.use(() => {
+app.use('*',() => {
   throw new NotFoundError(notFoundMessage);
 });
 app.use(errors());
