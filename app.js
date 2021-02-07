@@ -9,7 +9,6 @@ const { errors } = require('celebrate');
 const NotFoundError = require('./errors/not_found_err');
 const errorHandler = require('./middlewares/error_handler.js');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
-// eslint-disable-next-line import/no-unresolved
 const allRoutes = require('./routes/index_routes');
 const { notFoundMessage } = require('./message');
 
