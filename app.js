@@ -1,5 +1,6 @@
 require('dotenv').config();
 require('./mongo');
+const cors = require('cors');
 const express = require('express');
 const helmet = require('helmet');
 const bodyParser = require('body-parser');
@@ -15,6 +16,8 @@ const { notFoundMessage } = require('./message');
 const { PORT = 3000 } = process.env;
 
 const app = express();
+
+app.use(cors());
 
 app.use(helmet());
 app.use(cookieParser());
